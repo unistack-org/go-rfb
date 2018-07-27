@@ -1,6 +1,6 @@
 // Implementation of RFC 6143 §7.4 Pixel Format Data Structure.
 
-package vnc
+package rfb
 
 import (
 	"bytes"

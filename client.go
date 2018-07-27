@@ -1,4 +1,4 @@
-package vnc
+package rfb
 
 import (
 	"bufio"

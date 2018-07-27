@@ -9,7 +9,7 @@ import (
 	"net"
 	"time"
 
-	vnc "github.com/vtolstov/go-vnc"
+	vnc "github.com/sdstack/go-rfb"
 )
 
 func main() {

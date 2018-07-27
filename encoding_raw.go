@@ -1,4 +1,4 @@
-package vnc
+package rfb
 
 type RawEncoding struct {
 	Colors []Color
