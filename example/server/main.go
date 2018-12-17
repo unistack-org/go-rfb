@@ -9,7 +9,7 @@ import (
 	"net"
 	"time"
 
-	vnc "github.com/sdstack/go-rfb"
+	vnc "github.com/unistack-org/go-rfb"
 )
 
 func main() {
@@ -26,18 +26,15 @@ func main() {
 	defer tick.Stop()
 
 	cfg := &vnc.ServerConfig{
-		Width:             800,
-		Height:            600,
-		VersionHandler:    vnc.ServerVersionHandler,
-		SecurityHandler:   vnc.ServerSecurityHandler,
-		SecurityHandlers:  []vnc.SecurityHandler{&vnc.ClientAuthNone{}},
-		ClientInitHandler: vnc.ServerClientInitHandler,
-		ServerInitHandler: vnc.ServerServerInitHandler,
-		Encodings:         []vnc.Encoding{&vnc.RawEncoding{}},
-		PixelFormat:       vnc.PixelFormat32bit,
-		ClientMessageCh:   chServer,
-		ServerMessageCh:   chClient,
-		ClientMessages:    vnc.DefaultClientMessages,
+		Width:            800,
+		Height:           600,
+		Handlers:         vnc.DefaultServerHandlers,
+		SecurityHandlers: []vnc.SecurityHandler{&vnc.ClientAuthNone{}},
+		Encodings:        []vnc.Encoding{&vnc.RawEncoding{}},
+		PixelFormat:      vnc.PixelFormat32bit,
+		ClientMessageCh:  chServer,
+		ServerMessageCh:  chClient,
+		Messages:         vnc.DefaultClientMessages,
 	}
 	go vnc.Serve(context.Background(), ln, cfg)
 

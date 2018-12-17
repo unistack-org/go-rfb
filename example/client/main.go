@@ -7,7 +7,7 @@ import (
 	"os"
 	"time"
 
-	vnc "github.com/sdstack/go-rfb"
+	vnc "github.com/unistack-org/go-rfb"
 )
 
 func main() {
@@ -27,7 +27,7 @@ func main() {
 		PixelFormat:      vnc.PixelFormat32bit,
 		ClientMessageCh:  cchClient,
 		ServerMessageCh:  cchServer,
-		ServerMessages:   vnc.DefaultServerMessages,
+		Messages:         vnc.DefaultServerMessages,
 		Encodings:        []vnc.Encoding{&vnc.RawEncoding{}},
 		ErrorCh:          errorCh,
 	}
