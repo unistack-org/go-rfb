@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"image"
 	"log"
 	"math"
@@ -13,7 +12,7 @@ import (
 )
 
 func main() {
-	ln, err := net.Listen("tcp", ":5900")
+	ln, err := net.Listen("tcp", ":6900")
 	if err != nil {
 		log.Fatalf("Error listen. %v", err)
 	}
@@ -22,12 +21,13 @@ func main() {
 	chClient := make(chan vnc.ServerMessage)
 
 	im := image.NewRGBA(image.Rect(0, 0, width, height))
-	tick := time.NewTicker(time.Second / 2)
+	tick := time.NewTicker(time.Millisecond * 2)
 	defer tick.Stop()
+	connected := false
 
 	cfg := &vnc.ServerConfig{
-		Width:            800,
-		Height:           600,
+		Width:            width,
+		Height:           height,
 		Handlers:         vnc.DefaultServerHandlers,
 		SecurityHandlers: []vnc.SecurityHandler{&vnc.ClientAuthNone{}},
 		Encodings:        []vnc.Encoding{&vnc.RawEncoding{}},
@@ -37,23 +37,54 @@ func main() {
 		Messages:         vnc.DefaultClientMessages,
 	}
 	go vnc.Serve(context.Background(), ln, cfg)
-
+	anim := 0
 	// Process messages coming in on the ClientMessage channel.
 	for {
 		select {
 		case <-tick.C:
-			drawImage(im, 0)
-			fmt.Printf("tick\n")
-		case msg := <-chClient:
-			switch msg.Type() {
-			default:
-				log.Printf("11 Received message type:%v msg:%v\n", msg.Type(), msg)
+			if !connected {
+				continue
 			}
+			drawImage(im, anim*2)
+			anim++
+			colors := make([]vnc.Color, 0, 0)
+			for y := 0; y < height; y++ {
+				for x := 0; x < width; x++ {
+					r, g, b, a := im.At(x, y).RGBA()
+					clr := rgbaToColor(&cfg.PixelFormat, r, g, b, a)
+					colors = append(colors, *clr)
+				}
+			}
+			cfg.ServerMessageCh <- &vnc.FramebufferUpdate{
+				NumRect: 1,
+				Rects: []*vnc.Rectangle{
+					&vnc.Rectangle{
+						X:       0,
+						Y:       0,
+						Width:   width,
+						Height:  height,
+						EncType: vnc.EncRaw,
+						Enc: &vnc.RawEncoding{
+							Colors: colors,
+						},
+					}}}
+			/*
+				case msg := <-chClient:
+					switch msg.Type() {
+					case vnc.FramebufferUpdateMsgType:
+						connected = true
+						log.Printf("11 Received message type:%v msg:%v\n", msg.Type(), msg)
+					default:
+						log.Printf("11 Received message type:%v msg:%v\n", msg.Type(), msg)
+					}*/
 		case msg := <-chServer:
 			switch msg.Type() {
+			case vnc.FramebufferUpdateRequestMsgType:
+				connected = true
 			default:
 				log.Printf("22 Received message type:%v msg:%v\n", msg.Type(), msg)
 			}
+
 		}
 	}
 }
@@ -62,6 +93,15 @@ const (
 	width  = 800
 	height = 600
 )
+
+func rgbaToColor(pf *vnc.PixelFormat, r uint32, g uint32, b uint32, a uint32) *vnc.Color {
+	// fix converting rbga to rgb http://marcodiiga.github.io/rgba-to-rgb-conversion
+	clr := vnc.NewColor(pf, nil)
+	clr.R = uint16(r / 257)
+	clr.G = uint16(g / 257)
+	clr.B = uint16(b / 257)
+	return clr
+}
 
 func drawImage(im *image.RGBA, anim int) {
 	pos := 0
