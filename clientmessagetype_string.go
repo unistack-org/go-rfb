@@ -2,7 +2,21 @@
 
 package rfb
 
-import "fmt"
+import "strconv"
+
+func _() {
+	// An "invalid array index" compiler error signifies that the constant values have changed.
+	// Re-run the stringer command to generate them again.
+	var x [1]struct{}
+	_ = x[SetPixelFormatMsgType-0]
+	_ = x[SetEncodingsMsgType-2]
+	_ = x[FramebufferUpdateRequestMsgType-3]
+	_ = x[KeyEventMsgType-4]
+	_ = x[PointerEventMsgType-5]
+	_ = x[ClientCutTextMsgType-6]
+	_ = x[AteniKVMKeyEventMsgType-4]
+	_ = x[AteniKVMPointerEventMsgType-5]
+}
 
 const (
 	_ClientMessageType_name_0 = "SetPixelFormatMsgType"
@@ -10,7 +24,6 @@ const (
 )
 
 var (
-	_ClientMessageType_index_0 = [...]uint8{0, 21}
 	_ClientMessageType_index_1 = [...]uint8{0, 19, 50, 65, 84, 104}
 )
 
@@ -22,6 +35,6 @@ func (i ClientMessageType) String() string {
 		i -= 2
 		return _ClientMessageType_name_1[_ClientMessageType_index_1[i]:_ClientMessageType_index_1[i+1]]
 	default:
-		return fmt.Sprintf("ClientMessageType(%d)", i)
+		return "ClientMessageType(" + strconv.FormatInt(int64(i), 10) + ")"
 	}
 }

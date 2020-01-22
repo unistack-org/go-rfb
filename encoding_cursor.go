@@ -20,8 +20,8 @@ func (enc *CursorPseudoEncoding) Read(c Conn, rect *Rectangle) error {
 		return err
 	}
 
-	bitmask := make([]byte, int((rect.Width+7)/8*rect.Height))
-	if err := binary.Read(c, binary.BigEndian, &bitmask); err != nil {
+	enc.BitMask = make([]byte, int((rect.Width+7)/8*rect.Height))
+	if err := binary.Read(c, binary.BigEndian, &enc.BitMask); err != nil {
 		return err
 	}
 	/*

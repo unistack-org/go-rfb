@@ -2,7 +2,19 @@
 
 package rfb
 
-import "fmt"
+import "strconv"
+
+func _() {
+	// An "invalid array index" compiler error signifies that the constant values have changed.
+	// Re-run the stringer command to generate them again.
+	var x [1]struct{}
+	_ = x[SecTypeUnknown-0]
+	_ = x[SecTypeNone-1]
+	_ = x[SecTypeVNC-2]
+	_ = x[SecTypeTight-16]
+	_ = x[SecTypeATEN-16]
+	_ = x[SecTypeVeNCrypt-19]
+}
 
 const (
 	_SecurityType_name_0 = "SecTypeUnknownSecTypeNoneSecTypeVNC"
@@ -12,19 +24,17 @@ const (
 
 var (
 	_SecurityType_index_0 = [...]uint8{0, 14, 25, 35}
-	_SecurityType_index_1 = [...]uint8{0, 12}
-	_SecurityType_index_2 = [...]uint8{0, 15}
 )
 
 func (i SecurityType) String() string {
 	switch {
-	case 0 <= i && i <= 2:
+	case i <= 2:
 		return _SecurityType_name_0[_SecurityType_index_0[i]:_SecurityType_index_0[i+1]]
 	case i == 16:
 		return _SecurityType_name_1
 	case i == 19:
 		return _SecurityType_name_2
 	default:
-		return fmt.Sprintf("SecurityType(%d)", i)
+		return "SecurityType(" + strconv.FormatInt(int64(i), 10) + ")"
 	}
 }

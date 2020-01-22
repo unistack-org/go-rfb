@@ -2,7 +2,17 @@
 
 package rfb
 
-import "fmt"
+import "strconv"
+
+func _() {
+	// An "invalid array index" compiler error signifies that the constant values have changed.
+	// Re-run the stringer command to generate them again.
+	var x [1]struct{}
+	_ = x[TightCompressionBasic-0]
+	_ = x[TightCompressionFill-8]
+	_ = x[TightCompressionJPEG-9]
+	_ = x[TightCompressionPNG-10]
+}
 
 const (
 	_TightCompression_name_0 = "TightCompressionBasic"
@@ -10,7 +20,6 @@ const (
 )
 
 var (
-	_TightCompression_index_0 = [...]uint8{0, 21}
 	_TightCompression_index_1 = [...]uint8{0, 20, 40, 59}
 )
 
@@ -22,6 +31,6 @@ func (i TightCompression) String() string {
 		i -= 8
 		return _TightCompression_name_1[_TightCompression_index_1[i]:_TightCompression_index_1[i+1]]
 	default:
-		return fmt.Sprintf("TightCompression(%d)", i)
+		return "TightCompression(" + strconv.FormatInt(int64(i), 10) + ")"
 	}
 }

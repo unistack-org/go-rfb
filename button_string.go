@@ -2,7 +2,22 @@
 
 package rfb
 
-import "fmt"
+import "strconv"
+
+func _() {
+	// An "invalid array index" compiler error signifies that the constant values have changed.
+	// Re-run the stringer command to generate them again.
+	var x [1]struct{}
+	_ = x[BtnLeft-1]
+	_ = x[BtnMiddle-2]
+	_ = x[BtnRight-4]
+	_ = x[BtnFour-8]
+	_ = x[BtnFive-16]
+	_ = x[BtnSix-32]
+	_ = x[BtnSeven-64]
+	_ = x[BtnEight-128]
+	_ = x[BtnNone-0]
+}
 
 const (
 	_Button_name_0 = "BtnNoneBtnLeftBtnMiddle"
@@ -16,17 +31,11 @@ const (
 
 var (
 	_Button_index_0 = [...]uint8{0, 7, 14, 23}
-	_Button_index_1 = [...]uint8{0, 8}
-	_Button_index_2 = [...]uint8{0, 7}
-	_Button_index_3 = [...]uint8{0, 7}
-	_Button_index_4 = [...]uint8{0, 6}
-	_Button_index_5 = [...]uint8{0, 8}
-	_Button_index_6 = [...]uint8{0, 8}
 )
 
 func (i Button) String() string {
 	switch {
-	case 0 <= i && i <= 2:
+	case i <= 2:
 		return _Button_name_0[_Button_index_0[i]:_Button_index_0[i+1]]
 	case i == 4:
 		return _Button_name_1
@@ -41,6 +50,6 @@ func (i Button) String() string {
 	case i == 128:
 		return _Button_name_6
 	default:
-		return fmt.Sprintf("Button(%d)", i)
+		return "Button(" + strconv.FormatInt(int64(i), 10) + ")"
 	}
 }

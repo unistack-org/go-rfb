@@ -2,7 +2,30 @@
 
 package rfb
 
-import "fmt"
+import "strconv"
+
+func _() {
+	// An "invalid array index" compiler error signifies that the constant values have changed.
+	// Re-run the stringer command to generate them again.
+	var x [1]struct{}
+	_ = x[SecSubTypeUnknown-0]
+	_ = x[SecSubTypeVeNCrypt01Unknown-0]
+	_ = x[SecSubTypeVeNCrypt01Plain-19]
+	_ = x[SecSubTypeVeNCrypt01TLSNone-20]
+	_ = x[SecSubTypeVeNCrypt01TLSVNC-21]
+	_ = x[SecSubTypeVeNCrypt01TLSPlain-22]
+	_ = x[SecSubTypeVeNCrypt01X509None-23]
+	_ = x[SecSubTypeVeNCrypt01X509VNC-24]
+	_ = x[SecSubTypeVeNCrypt01X509Plain-25]
+	_ = x[SecSubTypeVeNCrypt02Unknown-0]
+	_ = x[SecSubTypeVeNCrypt02Plain-256]
+	_ = x[SecSubTypeVeNCrypt02TLSNone-257]
+	_ = x[SecSubTypeVeNCrypt02TLSVNC-258]
+	_ = x[SecSubTypeVeNCrypt02TLSPlain-259]
+	_ = x[SecSubTypeVeNCrypt02X509None-260]
+	_ = x[SecSubTypeVeNCrypt02X509VNC-261]
+	_ = x[SecSubTypeVeNCrypt02X509Plain-262]
+}
 
 const (
 	_SecuritySubType_name_0 = "SecSubTypeUnknown"
@@ -11,7 +34,6 @@ const (
 )
 
 var (
-	_SecuritySubType_index_0 = [...]uint8{0, 17}
 	_SecuritySubType_index_1 = [...]uint8{0, 25, 52, 78, 106, 134, 161, 190}
 	_SecuritySubType_index_2 = [...]uint8{0, 25, 52, 78, 106, 134, 161, 190}
 )
@@ -27,6 +49,6 @@ func (i SecuritySubType) String() string {
 		i -= 256
 		return _SecuritySubType_name_2[_SecuritySubType_index_2[i]:_SecuritySubType_index_2[i+1]]
 	default:
-		return fmt.Sprintf("SecuritySubType(%d)", i)
+		return "SecuritySubType(" + strconv.FormatInt(int64(i), 10) + ")"
 	}
 }
