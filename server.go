@@ -85,7 +85,7 @@ func (c *ServerConn) DesktopName() []byte {
 }
 
 // PixelFormat return connection pixel format
-func (c *ServerConn) PixelFormat() PixelFormat {
+func (c *ServerConn) PixelFormat() *PixelFormat {
 	return c.pixelFormat
 }
 
@@ -95,7 +95,7 @@ func (c *ServerConn) SetDesktopName(name []byte) {
 }
 
 // SetPixelFormat sets pixel format for server conn
-func (c *ServerConn) SetPixelFormat(pf PixelFormat) error {
+func (c *ServerConn) SetPixelFormat(pf *PixelFormat) error {
 	c.pixelFormat = pf
 	return nil
 }
@@ -174,7 +174,7 @@ type ServerConn struct {
 	// The pixel format associated with the connection. This shouldn't
 	// be modified. If you wish to set a new pixel format, use the
 	// SetPixelFormat method.
-	pixelFormat PixelFormat
+	pixelFormat *PixelFormat
 
 	quit chan struct{}
 }
@@ -195,7 +195,7 @@ type ServerConfig struct {
 	Handlers         []Handler
 	SecurityHandlers []SecurityHandler
 	Encodings        []Encoding
-	PixelFormat      PixelFormat
+	PixelFormat      *PixelFormat
 	ColorMap         ColorMap
 	ClientMessageCh  chan ClientMessage
 	ServerMessageCh  chan ServerMessage

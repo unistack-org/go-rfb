@@ -34,7 +34,7 @@ type PixelFormat struct {
 const pixelFormatLen = 16
 
 // NewPixelFormat returns a populated PixelFormat structure
-func NewPixelFormat(bpp uint8) PixelFormat {
+func NewPixelFormat(bpp uint8) *PixelFormat {
 	bigEndian := uint8(0)
 	//	rgbMax := uint16(math.Exp2(float64(bpp))) - 1
 	rMax := uint16(255)
@@ -58,16 +58,16 @@ func NewPixelFormat(bpp uint8) PixelFormat {
 		//	rs, gs, bs = 0, 8, 16
 		rs, gs, bs = 16, 8, 0
 	}
-	return PixelFormat{bpp, depth, bigEndian, tc, rMax, gMax, bMax, rs, gs, bs, [3]byte{}}
+	return &PixelFormat{bpp, depth, bigEndian, tc, rMax, gMax, bMax, rs, gs, bs, [3]byte{}}
 }
 
 // NewPixelFormatAten returns Aten IKVM pixel format
-func NewPixelFormatAten() PixelFormat {
-	return PixelFormat{16, 15, 0, 1, (1 << 5) - 1, (1 << 5) - 1, (1 << 5) - 1, 10, 5, 0, [3]byte{}}
+func NewPixelFormatAten() *PixelFormat {
+	return &PixelFormat{16, 15, 0, 1, (1 << 5) - 1, (1 << 5) - 1, (1 << 5) - 1, 10, 5, 0, [3]byte{}}
 }
 
 // Marshal implements the Marshaler interface
-func (pf PixelFormat) Marshal() ([]byte, error) {
+func (pf *PixelFormat) Marshal() ([]byte, error) {
 	// Validation checks.
 	switch pf.BPP {
 	case 8, 16, 32:
@@ -89,7 +89,7 @@ func (pf PixelFormat) Marshal() ([]byte, error) {
 	buf.Reset()
 	defer bPool.Put(buf)
 
-	if err := binary.Write(buf, binary.BigEndian, &pf); err != nil {
+	if err := binary.Write(buf, binary.BigEndian, pf); err != nil {
 		return nil, err
 	}
 
@@ -97,7 +97,7 @@ func (pf PixelFormat) Marshal() ([]byte, error) {
 }
 
 // Read reads from an io.Reader, and populates the PixelFormat
-func (pf PixelFormat) Read(r io.Reader) error {
+func (pf *PixelFormat) Read(r io.Reader) error {
 	buf := make([]byte, pixelFormatLen)
 	if _, err := io.ReadAtLeast(r, buf, pixelFormatLen); err != nil {
 		return err
@@ -106,7 +106,7 @@ func (pf PixelFormat) Read(r io.Reader) error {
 }
 
 // Unmarshal implements the Unmarshaler interface
-func (pf PixelFormat) Unmarshal(data []byte) error {
+func (pf *PixelFormat) Unmarshal(data []byte) error {
 	buf := bPool.Get().(*bytes.Buffer)
 	buf.Reset()
 	defer bPool.Put(buf)
@@ -115,7 +115,7 @@ func (pf PixelFormat) Unmarshal(data []byte) error {
 		return err
 	}
 
-	if err := binary.Read(buf, binary.BigEndian, &pf); err != nil {
+	if err := binary.Read(buf, binary.BigEndian, pf); err != nil {
 		return err
 	}
 
@@ -123,12 +123,12 @@ func (pf PixelFormat) Unmarshal(data []byte) error {
 }
 
 // String implements the fmt.Stringer interface
-func (pf PixelFormat) String() string {
+func (pf *PixelFormat) String() string {
 	return fmt.Sprintf("{ bpp: %d depth: %d big-endian: %d true-color: %d red-max: %d green-max: %d blue-max: %d red-shift: %d green-shift: %d blue-shift: %d }",
 		pf.BPP, pf.Depth, pf.BigEndian, pf.TrueColor, pf.RedMax, pf.GreenMax, pf.BlueMax, pf.RedShift, pf.GreenShift, pf.BlueShift)
 }
 
-func (pf PixelFormat) order() binary.ByteOrder {
+func (pf *PixelFormat) order() binary.ByteOrder {
 	if pf.BigEndian == 1 {
 		return binary.BigEndian
 	}

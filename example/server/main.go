@@ -51,7 +51,7 @@ func main() {
 			for y := 0; y < height; y++ {
 				for x := 0; x < width; x++ {
 					r, g, b, a := im.At(x, y).RGBA()
-					clr := rgbaToColor(&cfg.PixelFormat, r, g, b, a)
+					clr := rgbaToColor(cfg.PixelFormat, r, g, b, a)
 					colors = append(colors, *clr)
 				}
 			}

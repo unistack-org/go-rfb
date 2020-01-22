@@ -55,7 +55,7 @@ const (
 // ServerInit struct used in server init handshake
 type ServerInit struct {
 	FBWidth, FBHeight uint16
-	PixelFormat       PixelFormat
+	PixelFormat       *PixelFormat
 	NameLength        uint32
 	NameText          []byte
 }

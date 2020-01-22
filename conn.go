@@ -11,8 +11,8 @@ type Conn interface {
 	Conn() net.Conn
 	Config() interface{}
 	Protocol() string
-	PixelFormat() PixelFormat
-	SetPixelFormat(PixelFormat) error
+	PixelFormat() *PixelFormat
+	SetPixelFormat(*PixelFormat) error
 	ColorMap() ColorMap
 	SetColorMap(ColorMap)
 	Encodings() []Encoding
