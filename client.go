@@ -254,6 +254,35 @@ func (*DefaultClientMessageHandler) Handle(c Conn) error {
 		serverMessages[m.Type()] = m
 	}
 
+	spf := &SetPixelFormat{PF: *cfg.PixelFormat}
+	if err = spf.Write(c); err != nil {
+		//		cfg.ErrorCh <- err
+		return err
+	}
+
+	senc := &SetEncodings{
+		EncNum:    uint16(len(cfg.Encodings)),
+		Encodings: make([]EncodingType, 0, len(cfg.Encodings)),
+	}
+
+	for _, enc := range cfg.Encodings {
+		senc.Encodings = append(senc.Encodings, enc.Type())
+	}
+	if err = senc.Write(c); err != nil {
+		return err
+	}
+
+	fbur := &FramebufferUpdateRequest{
+		Inc:    0,
+		X:      0,
+		Y:      0,
+		Width:  c.Width(),
+		Height: c.Height(),
+	}
+	if err = fbur.Write(c); err != nil {
+		return err
+	}
+
 	go func() {
 		defer wg.Done()
 		for {
@@ -279,7 +308,7 @@ func (*DefaultClientMessageHandler) Handle(c Conn) error {
 				}
 				msg, ok := serverMessages[messageType]
 				if !ok {
-					err = fmt.Errorf("unknown message-type: %v", messageType)
+					err = fmt.Errorf("unknown message-type: %#+v", messageType)
 					cfg.ErrorCh <- err
 					return
 				}

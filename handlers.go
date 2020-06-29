@@ -257,7 +257,9 @@ type DefaultClientServerInitHandler struct{}
 // Handle provide default server init handler
 func (*DefaultClientServerInitHandler) Handle(c Conn) error {
 	var err error
+
 	srvInit := ServerInit{}
+	pf := PixelFormat{}
 
 	if err = binary.Read(c, binary.BigEndian, &srvInit.FBWidth); err != nil {
 		return err
@@ -265,9 +267,11 @@ func (*DefaultClientServerInitHandler) Handle(c Conn) error {
 	if err = binary.Read(c, binary.BigEndian, &srvInit.FBHeight); err != nil {
 		return err
 	}
-	if err = binary.Read(c, binary.BigEndian, &srvInit.PixelFormat); err != nil {
+	if err = binary.Read(c, binary.BigEndian, &pf); err != nil {
 		return err
 	}
+	srvInit.PixelFormat = &pf
+
 	if err = binary.Read(c, binary.BigEndian, &srvInit.NameLength); err != nil {
 		return err
 	}
@@ -276,7 +280,9 @@ func (*DefaultClientServerInitHandler) Handle(c Conn) error {
 	if err = binary.Read(c, binary.BigEndian, &srvInit.NameText); err != nil {
 		return err
 	}
+
 	c.SetDesktopName(srvInit.NameText)
+
 	if c.Protocol() == "aten1" {
 		c.SetWidth(800)
 		c.SetHeight(600)
@@ -286,6 +292,7 @@ func (*DefaultClientServerInitHandler) Handle(c Conn) error {
 		c.SetHeight(srvInit.FBHeight)
 		c.SetPixelFormat(srvInit.PixelFormat)
 	}
+
 	if c.Protocol() == "aten1" {
 		ikvm := struct {
 			_               [8]byte
