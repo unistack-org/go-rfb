@@ -22,6 +22,10 @@ var (
 
 // Connect handshake with remote server using underlining net.Conn
 func Connect(ctx context.Context, c net.Conn, cfg *ClientConfig) (*ClientConn, error) {
+	if c == nil {
+		return nil, fmt.Errorf("passed invalid net.Conn")
+	}
+
 	conn, err := NewClientConn(c, cfg)
 	if err != nil {
 		conn.Close()
@@ -220,6 +224,7 @@ func NewClientConn(c net.Conn, cfg *ClientConfig) (*ClientConn, error) {
 	if len(cfg.Encodings) == 0 {
 		return nil, fmt.Errorf("client can't handle encodings")
 	}
+
 	return &ClientConn{
 		c:           c,
 		cfg:         cfg,
