@@ -238,6 +238,32 @@ func NewClientConn(c net.Conn, cfg *ClientConfig) (*ClientConn, error) {
 	}, nil
 }
 
+// readAndRequestNext reads a server message from the conn. After every
+// FramebufferUpdate it immediately sends an incremental FramebufferUpdateRequest
+// (Inc=1, full frame) so the server keeps streaming subsequent frames. Without
+// this the ATEN/IKVM server sends only the first frame and the screen freezes.
+// This mirrors the noVNC bmc-support forks, which re-request after each update
+// when continuous updates are not enabled.
+func readAndRequestNext(c Conn, m ServerMessage) (ServerMessage, error) {
+	parsed, err := m.Read(c)
+	if err != nil {
+		return nil, err
+	}
+	if _, ok := parsed.(*FramebufferUpdate); ok {
+		next := &FramebufferUpdateRequest{
+			Inc:    1,
+			X:      0,
+			Y:      0,
+			Width:  c.Width(),
+			Height: c.Height(),
+		}
+		if err := next.Write(c); err != nil {
+			return nil, err
+		}
+	}
+	return parsed, nil
+}
+
 // DefaultClientMessageHandler represents default client message handler
 type DefaultClientMessageHandler struct{}
 
@@ -312,7 +338,7 @@ func (*DefaultClientMessageHandler) Handle(c Conn) error {
 					cfg.ErrorCh <- err
 					return
 				}
-				parsedMsg, err := msg.Read(c)
+				parsedMsg, err := readAndRequestNext(c, msg)
 				if err != nil {
 					cfg.ErrorCh <- err
 					return

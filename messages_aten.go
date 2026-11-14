@@ -21,12 +21,16 @@ const (
 	AteniKVMPointerEventMsgType ClientMessageType = 5
 )
 
-// AteniKVMKeyEvent holds the wire format message
+// AteniKVMKeyEvent holds the wire format message.
+//
+// The wire layout is 18 bytes: type,0,down,0,0,hid(4),9 pad. The `Key`
+// field holds the X11 keysym in API terms; Write translates it to the
+// USB-HID usage code and places it in the 4-byte field (offset 5).
 type AteniKVMKeyEvent struct {
 	_    [1]byte // padding
 	Down uint8   // down-flag
 	_    [2]byte // padding
-	Key  Key     // key
+	Key  Key     // key (keysym; translated to HID in Write)
 	_    [9]byte // padding
 }
 
@@ -40,7 +44,7 @@ type AteniKVMPointerEvent struct {
 }
 
 func (msg *AteniKVMPointerEvent) Supported(c Conn) bool {
-	return false
+	return true
 }
 
 func (msg *AteniKVMPointerEvent) String() string {
@@ -73,7 +77,7 @@ func (msg *AteniKVMPointerEvent) Write(c Conn) error {
 }
 
 func (msg *AteniKVMKeyEvent) Supported(c Conn) bool {
-	return false
+	return true
 }
 
 func (msg *AteniKVMKeyEvent) String() string {
@@ -92,14 +96,24 @@ func (*AteniKVMKeyEvent) Read(c Conn) (ClientMessage, error) {
 	return &msg, nil
 }
 
+// Write serialises the key event, translating the X11 keysym in msg.Key to
+// the USB-HID usage code ATEN iKVM expects in the 4-byte field. Keysyms
+// without an ATEN mapping are dropped, matching the bmc-support reference
+// implementations.
 func (msg *AteniKVMKeyEvent) Write(c Conn) error {
 	if !msg.Supported(c) {
 		return nil
 	}
-	if err := binary.Write(c, binary.BigEndian, msg.Type()); err != nil {
+	out := *msg
+	if hid, ok := KeysymToHID(msg.Key); ok {
+		out.Key = Key(hid)
+	} else {
+		return nil // no ATEN mapping for this keysym
+	}
+	if err := binary.Write(c, binary.BigEndian, out.Type()); err != nil {
 		return err
 	}
-	if err := binary.Write(c, binary.BigEndian, msg); err != nil {
+	if err := binary.Write(c, binary.BigEndian, &out); err != nil {
 		return err
 	}
 	return c.Flush()
@@ -195,7 +209,7 @@ func (msg *AteniKVMKeepAliveEvent) Write(c Conn) error {
 
 // AteniKVMVideoGetInfo unknown aten ikvm message
 type AteniKVMVideoGetInfo struct {
-	_ [20]byte
+	_ [4]byte
 }
 
 func (msg *AteniKVMVideoGetInfo) Supported(c Conn) bool {
@@ -215,7 +229,7 @@ func (*AteniKVMVideoGetInfo) Type() ServerMessageType {
 // Read unmarshal message from conn
 func (*AteniKVMVideoGetInfo) Read(c Conn) (ServerMessage, error) {
 	msg := &AteniKVMVideoGetInfo{}
-	var pad [40]byte
+	var pad [4]byte
 	if err := binary.Read(c, binary.BigEndian, &pad); err != nil {
 		return nil, err
 	}
@@ -258,7 +272,7 @@ func (*AteniKVMMouseGetInfo) Type() ServerMessageType {
 
 // Read unmarshal message from conn
 func (*AteniKVMMouseGetInfo) Read(c Conn) (ServerMessage, error) {
-	msg := &AteniKVMFrontGroundEvent{}
+	msg := &AteniKVMMouseGetInfo{}
 	var pad [2]byte
 	if err := binary.Read(c, binary.BigEndian, &pad); err != nil {
 		return nil, err
