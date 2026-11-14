@@ -49,13 +49,19 @@ func newConn(hostport string, password []byte) (vnc.Conn, chan vnc.ClientMessage
 	cchClient := make(chan vnc.ClientMessage)
 	errorCh := make(chan error)
 	ccfg := &vnc.ClientConfig{
-		SecurityHandlers: []vnc.SecurityHandler{&vnc.ClientAuthVNC{Password: password}},
-		PixelFormat:      vnc.PixelFormat32bit,
-		ClientMessageCh:  cchClient,
-		ServerMessageCh:  cchServer,
-		Messages:         vnc.DefaultServerMessages,
-		Encodings:        []vnc.Encoding{&vnc.RawEncoding{}},
-		ErrorCh:          errorCh,
+		// The upstream is an ATEN iKVM, so authenticate with the ATEN
+		// security type (16) rather than standard VNC. This flips the
+		// protocol to "aten1", which makes Rectangle.Read decode a raw
+		// encoding as an AtenHermon (16x16 sub-rect tiles + raw blocks).
+		SecurityHandlers: []vnc.SecurityHandler{&vnc.ClientAuthATEN{Password: password}},
+		// ATEN iKVM uses 16-bit little-endian RGB555. Decoding with this
+		// format expands the 5-bit channels to 8-bit for the transcoder.
+		PixelFormat:     vnc.NewPixelFormatAten(),
+		ClientMessageCh: cchClient,
+		ServerMessageCh: cchServer,
+		Messages:        vnc.DefaultServerMessages,
+		Encodings:       []vnc.Encoding{&vnc.RawEncoding{}},
+		ErrorCh:         errorCh,
 	}
 	csrv := make(chan vnc.Conn)
 	inp := make(chan vnc.ClientMessage)
@@ -89,6 +95,23 @@ func handleIO(cli vnc.Conn, inp chan vnc.ClientMessage, out chan vnc.ServerMessa
 			fmt.Printf("err %v\n", err)
 			return
 		case msg := <-ccfg.ServerMessageCh:
+			// ATEN iKVM server messages: transcode hermon FBU into standard
+			// raw rectangles, and drop the proprietary ATEN server messages
+			// (types 4/22/51/55/57/60) a standard downstream client can't
+			// parse.
+			switch m := msg.(type) {
+			case *vnc.FramebufferUpdate:
+				tu := m.TranscodeAtenHermon()
+				if tu == nil || tu.NumRect == 0 {
+					// Screen is off / nothing to paint.
+					continue
+				}
+				msg = tu
+			default:
+				if !isStandardServerMessage(m.Type()) {
+					continue
+				}
+			}
 			for _, srv := range conns {
 				scfg := srv.Config().(*vnc.ServerConfig)
 				scfg.ServerMessageCh <- msg
@@ -115,7 +138,10 @@ func handleIO(cli vnc.Conn, inp chan vnc.ClientMessage, out chan vnc.ServerMessa
 				}
 				ccfg.ClientMessageCh <- &vnc.SetEncodings{Encodings: encTypes}
 			default:
-				ccfg.ClientMessageCh <- msg
+				// Translate standard VNC input into ATEN iKVM HID events;
+				// the upstream expects the proprietary 18/16-byte key and
+				// pointer messages, not standard RFB ones.
+				ccfg.ClientMessageCh <- toAtenClientMessage(msg)
 			}
 		case msg := <-out:
 			fmt.Printf("4 %#+v\n", msg)
@@ -125,6 +151,41 @@ func handleIO(cli vnc.Conn, inp chan vnc.ClientMessage, out chan vnc.ServerMessa
 
 	}
 
+}
+
+// isStandardServerMessage reports whether a server message type is part of
+// the standard RFB set (FBU, SetColorMapEntries, Bell, ServerCutText). ATEN
+// iKVMs also emit proprietary server messages (types 4/22/51/55/57/60) that a
+// standard VNC client cannot parse, so the proxy forwards only the standard
+// ones downstream.
+func isStandardServerMessage(t vnc.ServerMessageType) bool {
+	switch t {
+	case vnc.FramebufferUpdateMsgType,
+		vnc.SetColorMapEntriesMsgType,
+		vnc.BellMsgType,
+		vnc.ServerCutTextMsgType:
+		return true
+	}
+	return false
+}
+
+// toAtenClientMessage translates a standard VNC client message into the
+// equivalent ATEN iKVM HID message. The ATEN iKVM expects proprietary key
+// (18-byte) and pointer (16-byte) events rather than standard RFB ones, so
+// without this translation the keyboard and mouse would not work. Standard
+// SetPixelFormat / SetEncodings / FramebufferUpdateRequest / ClientCutText
+// messages are passed through unchanged; anything unrecognised is forwarded
+// as-is (it will be ignored upstream if not understood).
+func toAtenClientMessage(msg vnc.ClientMessage) vnc.ClientMessage {
+	switch m := msg.(type) {
+	case *vnc.KeyEvent:
+		// Write() maps the keysym to an HID usage and drops unmapped keys.
+		return &vnc.AteniKVMKeyEvent{Down: m.Down, Key: m.Key}
+	case *vnc.PointerEvent:
+		return &vnc.AteniKVMPointerEvent{Mask: m.Mask, X: m.X, Y: m.Y}
+	default:
+		return msg
+	}
 }
 
 type HijackHandler struct{}
