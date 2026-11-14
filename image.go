@@ -98,9 +98,24 @@ func (clr *Color) Read(c Conn) error {
 	}
 
 	if clr.pf.TrueColor != 0 {
+		// Expand true-color channels to their 8-bit value. For ATEN the
+		// pixel format is 16-bit RGB555 (RedMax/GreenMax/BlueMax = 31,
+		// shifts 10/5/0), so the raw channel values are 5-bit. The noVNC
+		// bmc-support forks expand them with (v*255)/31 before drawing.
+		// For normal formats the max is 255, so this is an identity
+		// transform and existing behaviour is unchanged.
 		clr.R = uint16((pixel >> clr.pf.RedShift) & uint32(clr.pf.RedMax))
 		clr.G = uint16((pixel >> clr.pf.GreenShift) & uint32(clr.pf.GreenMax))
 		clr.B = uint16((pixel >> clr.pf.BlueShift) & uint32(clr.pf.BlueMax))
+		if clr.pf.RedMax > 0 {
+			clr.R = uint16(clr.R * 255 / uint16(clr.pf.RedMax))
+		}
+		if clr.pf.GreenMax > 0 {
+			clr.G = uint16(clr.G * 255 / uint16(clr.pf.GreenMax))
+		}
+		if clr.pf.BlueMax > 0 {
+			clr.B = uint16(clr.B * 255 / uint16(clr.pf.BlueMax))
+		}
 	} else {
 		*clr = clr.cm[pixel]
 		clr.cmIndex = pixel
@@ -171,6 +186,10 @@ func (rect *Rectangle) Read(c Conn) error {
 	switch rect.EncType {
 	case EncCopyRect:
 		rect.Enc = &CopyRectEncoding{}
+	case EncHextile:
+		rect.Enc = &HextileEncoding{}
+	case EncRRE:
+		rect.Enc = &RREEncoding{}
 	case EncTight:
 		rect.Enc = &TightEncoding{}
 	case EncTightPng:

@@ -332,7 +332,7 @@ func (msg *SetPixelFormat) Supported(c Conn) bool {
 
 // String returns string
 func (msg *SetPixelFormat) String() string {
-	return fmt.Sprintf("%s", msg.PF)
+	return fmt.Sprintf("%v", msg.PF)
 }
 
 // Type returns MessageType
