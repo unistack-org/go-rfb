@@ -186,6 +186,8 @@ func (rect *Rectangle) Read(c Conn) error {
 	switch rect.EncType {
 	case EncCopyRect:
 		rect.Enc = &CopyRectEncoding{}
+	case EncHextile:
+		rect.Enc = &HextileEncoding{}
 	case EncTight:
 		rect.Enc = &TightEncoding{}
 	case EncTightPng:
