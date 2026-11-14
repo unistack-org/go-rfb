@@ -11,36 +11,36 @@ import (
 // and an output buffer (for Write). It implements only the methods the tests
 // exercise; the rest return zero values.
 type fakeConn struct {
-	in   *bytes.Buffer
-	out  bytes.Buffer
-	w    uint16
-	h    uint16
+	in    *bytes.Buffer
+	out   bytes.Buffer
+	w     uint16
+	h     uint16
 	proto string
 }
 
-func (f *fakeConn) Read(p []byte) (int, error)  { return f.in.Read(p) }
-func (f *fakeConn) Write(p []byte) (int, error) { return f.out.Write(p) }
-func (f *fakeConn) Close() error                { return nil }
-func (f *fakeConn) Flush() error                { return nil }
-func (f *fakeConn) Conn() net.Conn              { return nil }
-func (f *fakeConn) Config() interface{}         { return nil }
-func (f *fakeConn) Protocol() string            { return f.proto }
-func (f *fakeConn) PixelFormat() *PixelFormat   { return nil }
-func (f *fakeConn) SetPixelFormat(*PixelFormat) error { return nil }
-func (f *fakeConn) ColorMap() ColorMap          { return ColorMap{} }
-func (f *fakeConn) SetColorMap(ColorMap)        {}
-func (f *fakeConn) Encodings() []Encoding       { return nil }
-func (f *fakeConn) SetEncodings([]EncodingType) error { return nil }
-func (f *fakeConn) Width() uint16               { return f.w }
-func (f *fakeConn) Height() uint16              { return f.h }
-func (f *fakeConn) SetWidth(uint16)             {}
-func (f *fakeConn) SetHeight(uint16)            {}
-func (f *fakeConn) DesktopName() []byte         { return nil }
-func (f *fakeConn) SetDesktopName([]byte)       {}
-func (f *fakeConn) Wait()                       {}
-func (f *fakeConn) SetProtoVersion(string)      {}
+func (f *fakeConn) Read(p []byte) (int, error)               { return f.in.Read(p) }
+func (f *fakeConn) Write(p []byte) (int, error)              { return f.out.Write(p) }
+func (f *fakeConn) Close() error                             { return nil }
+func (f *fakeConn) Flush() error                             { return nil }
+func (f *fakeConn) Conn() net.Conn                           { return nil }
+func (f *fakeConn) Config() interface{}                      { return nil }
+func (f *fakeConn) Protocol() string                         { return f.proto }
+func (f *fakeConn) PixelFormat() *PixelFormat                { return nil }
+func (f *fakeConn) SetPixelFormat(*PixelFormat) error        { return nil }
+func (f *fakeConn) ColorMap() ColorMap                       { return ColorMap{} }
+func (f *fakeConn) SetColorMap(ColorMap)                     {}
+func (f *fakeConn) Encodings() []Encoding                    { return nil }
+func (f *fakeConn) SetEncodings([]EncodingType) error        { return nil }
+func (f *fakeConn) Width() uint16                            { return f.w }
+func (f *fakeConn) Height() uint16                           { return f.h }
+func (f *fakeConn) SetWidth(uint16)                          {}
+func (f *fakeConn) SetHeight(uint16)                         {}
+func (f *fakeConn) DesktopName() []byte                      { return nil }
+func (f *fakeConn) SetDesktopName([]byte)                    {}
+func (f *fakeConn) Wait()                                    {}
+func (f *fakeConn) SetProtoVersion(string)                   {}
 func (f *fakeConn) SetSecurityHandler(SecurityHandler) error { return nil }
-func (f *fakeConn) SecurityHandler() SecurityHandler { return nil }
+func (f *fakeConn) SecurityHandler() SecurityHandler         { return nil }
 
 func be(b ...byte) *bytes.Buffer { return bytes.NewBuffer(b) }
 
@@ -150,8 +150,8 @@ func TestReadAndRequestNextSendsFramebufferRequest(t *testing.T) {
 	// The re-request must be an 11-byte incremental FramebufferUpdateRequest
 	// using the connection's dimensions: type(3) inc(1) x(2) y(2) w(2) h(2).
 	want := []byte{
-		0x03, // FramebufferUpdateRequestMsgType
-		0x01, // inc
+		0x03,       // FramebufferUpdateRequestMsgType
+		0x01,       // inc
 		0x00, 0x00, // x
 		0x00, 0x00, // y
 		0x04, 0x00, // width = 1024
@@ -191,9 +191,9 @@ func TestAtenKeyEventWriteHIDTranslation(t *testing.T) {
 		t.Fatalf("Write(Return) error: %v", err)
 	}
 	want := []byte{
-		0x04, // key event type
-		0x00, // pad
-		0x01, // down
+		0x04,       // key event type
+		0x00,       // pad
+		0x01,       // down
 		0x00, 0x00, // pad
 		0x00, 0x00, 0x00, 0x28, // HID usage 0x28, BE32
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 9 pad
@@ -222,9 +222,9 @@ func TestAtenPointerEventWrite(t *testing.T) {
 		t.Fatalf("Write error: %v", err)
 	}
 	want := []byte{
-		0x05, // pointer event type
-		0x00, // pad
-		0x01, // mask
+		0x05,       // pointer event type
+		0x00,       // pad
+		0x01,       // mask
 		0x00, 0x64, // x = 100 BE16
 		0x00, 0xC8, // y = 200 BE16
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 11 pad
@@ -237,8 +237,8 @@ func TestAtenPointerEventWrite(t *testing.T) {
 // A few keysym->HID spot checks (regression guard for the ported table).
 func TestKeysymToHID(t *testing.T) {
 	cases := []struct {
-		key  Key
-		hid  uint8
+		key Key
+		hid uint8
 	}{
 		{Return, 0x28},
 		{A, 0x04},
@@ -285,8 +285,8 @@ func TestAtenColorReadRGB555Expansion(t *testing.T) {
 	// bytes (ATEN pixel format is BigEndian=0 -> little-endian stream). Each is
 	// hand-verified: R5=(px>>10)&31, G5=(px>>5)&31, B5=px&31, then v*255/31.
 	cases := []struct {
-		name   string
-		wire   []byte
+		name    string
+		wire    []byte
 		r, g, b uint16
 	}{
 		// 0x7C00 -> R5=31 -> (255, 0, 0)

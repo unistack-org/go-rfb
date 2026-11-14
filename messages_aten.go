@@ -130,7 +130,7 @@ func (msg *AteniKVMFrontGroundEvent) Supported(c Conn) bool {
 
 // String return string representation
 func (msg *AteniKVMFrontGroundEvent) String() string {
-	return fmt.Sprintf("%s", msg.Type())
+	return fmt.Sprintf("%v", msg.Type())
 }
 
 // Type return ServerMessageType
@@ -174,7 +174,7 @@ func (msg *AteniKVMKeepAliveEvent) Supported(c Conn) bool {
 
 // String return string representation
 func (msg *AteniKVMKeepAliveEvent) String() string {
-	return fmt.Sprintf("%s", msg.Type())
+	return fmt.Sprintf("%v", msg.Type())
 }
 
 // Type return ServerMessageType
@@ -218,7 +218,7 @@ func (msg *AteniKVMVideoGetInfo) Supported(c Conn) bool {
 
 // String return string representation
 func (msg *AteniKVMVideoGetInfo) String() string {
-	return fmt.Sprintf("%s", msg.Type())
+	return fmt.Sprintf("%v", msg.Type())
 }
 
 // Type return ServerMessageType
@@ -262,7 +262,7 @@ func (msg *AteniKVMMouseGetInfo) Supported(c Conn) bool {
 
 // String return string representation
 func (msg *AteniKVMMouseGetInfo) String() string {
-	return fmt.Sprintf("%s", msg.Type())
+	return fmt.Sprintf("%v", msg.Type())
 }
 
 // Type return ServerMessageType
@@ -306,7 +306,7 @@ func (msg *AteniKVMSessionMessage) Supported(c Conn) bool {
 
 // String return string representation
 func (msg *AteniKVMSessionMessage) String() string {
-	return fmt.Sprintf("%s", msg.Type())
+	return fmt.Sprintf("%v", msg.Type())
 }
 
 // Type return ServerMessageType
@@ -350,7 +350,7 @@ func (msg *AteniKVMGetViewerLang) Supported(c Conn) bool {
 
 // String return string representation
 func (msg *AteniKVMGetViewerLang) String() string {
-	return fmt.Sprintf("%s", msg.Type())
+	return fmt.Sprintf("%v", msg.Type())
 }
 
 // Type return ServerMessageType
