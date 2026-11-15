@@ -1,10 +1,7 @@
 package rfb
 
-// This file ports the X11-keysym-to-USB-HID-usage table used by ATEN iKVM
-// for keyboard input. The mapping is derived from the noVNC bmc-support
-// forks (mkrasselt1/supermicro-kvm-html5 `keysym2hid.js`, itself based on
-// kelleyk). Only the byte/numeric mapping is ported; no code from the
-// MPL-2.0 forks is vendored.
+// This file holds the X11-keysym-to-USB-HID-usage table used for ATEN iKVM
+// keyboard input.
 //
 // ATEN iKVM expects USB-HID usage codes in key events, not X11 keysyms.
 
@@ -101,7 +98,7 @@ var keysym2HID = buildKeysym2HID()
 
 // KeysymToHID maps an X11 keysym to a USB-HID usage code for ATEN iKVM.
 // The bool result is false when the keysym has no ATEN mapping; the caller
-// should drop the event in that case (mirrors the bmc-support forks).
+// should drop the event in that case.
 func KeysymToHID(k Key) (uint8, bool) {
 	hid, ok := keysym2HID[k]
 	return hid, ok

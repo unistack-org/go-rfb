@@ -237,7 +237,7 @@ func TestAtenPointerEventWrite(t *testing.T) {
 	}
 }
 
-// A few keysym->HID spot checks (regression guard for the ported table).
+// A few keysym->HID spot checks (regression guard for the mapping table).
 func TestKeysymToHID(t *testing.T) {
 	cases := []struct {
 		key Key

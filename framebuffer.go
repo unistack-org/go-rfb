@@ -11,9 +11,8 @@ import (
 // in memory and exposes the current frame as a draw.Image via Screenshot(),
 // which is the building block for capturing a VNC screenshot.
 //
-// It mirrors the v2v11 VncCanvas/DrawImage model (a client-owned draw.Image
-// target) but is driven by our flat []Color encodings, so it needs no changes
-// to the Encoding interface.
+// It is a client-owned draw.Image target driven by our flat []Color
+// encodings, so it needs no changes to the Encoding interface.
 //
 // Usage from a client message loop:
 //

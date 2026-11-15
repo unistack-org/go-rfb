@@ -98,8 +98,7 @@ func (*AteniKVMKeyEvent) Read(c Conn) (ClientMessage, error) {
 
 // Write serialises the key event, translating the X11 keysym in msg.Key to
 // the USB-HID usage code ATEN iKVM expects in the 4-byte field. Keysyms
-// without an ATEN mapping are dropped, matching the bmc-support reference
-// implementations.
+// without an ATEN mapping are dropped.
 func (msg *AteniKVMKeyEvent) Write(c Conn) error {
 	if !msg.Supported(c) {
 		return nil

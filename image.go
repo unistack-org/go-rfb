@@ -100,10 +100,10 @@ func (clr *Color) Read(c Conn) error {
 	if clr.pf.TrueColor != 0 {
 		// Expand true-color channels to their 8-bit value. For ATEN the
 		// pixel format is 16-bit RGB555 (RedMax/GreenMax/BlueMax = 31,
-		// shifts 10/5/0), so the raw channel values are 5-bit. The noVNC
-		// bmc-support forks expand them with (v*255)/31 before drawing.
-		// For normal formats the max is 255, so this is an identity
-		// transform and existing behaviour is unchanged.
+		// shifts 10/5/0), so the raw channel values are 5-bit; expand them
+		// with (v*255)/31 before drawing. For normal formats the max is 255,
+		// so this is an identity transform and existing behaviour is
+		// unchanged.
 		clr.R = uint16((pixel >> clr.pf.RedShift) & uint32(clr.pf.RedMax))
 		clr.G = uint16((pixel >> clr.pf.GreenShift) & uint32(clr.pf.GreenMax))
 		clr.B = uint16((pixel >> clr.pf.BlueShift) & uint32(clr.pf.BlueMax))

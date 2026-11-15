@@ -242,8 +242,6 @@ func NewClientConn(c net.Conn, cfg *ClientConfig) (*ClientConn, error) {
 // FramebufferUpdate it immediately sends an incremental FramebufferUpdateRequest
 // (Inc=1, full frame) so the server keeps streaming subsequent frames. Without
 // this the ATEN/IKVM server sends only the first frame and the screen freezes.
-// This mirrors the noVNC bmc-support forks, which re-request after each update
-// when continuous updates are not enabled.
 func readAndRequestNext(c Conn, m ServerMessage, writeMu *sync.Mutex) (ServerMessage, error) {
 	parsed, err := m.Read(c)
 	if err != nil {
