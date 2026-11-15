@@ -68,6 +68,11 @@ func reencodeTightPng(fu *vnc.FramebufferUpdate) *vnc.FramebufferUpdate {
 		Rects: make([]*vnc.Rectangle, 0, len(fu.Rects)),
 	}
 	for _, r := range fu.Rects {
+		// A zero-area rectangle encodes to nothing; drop it (a tightpng
+		// PNG rectangle cannot carry zero pixels).
+		if r.Width == 0 || r.Height == 0 {
+			continue
+		}
 		raw, ok := r.Enc.(*vnc.RawEncoding)
 		if !ok {
 			// Non-raw rectangle (e.g. copyrect): pass through.
@@ -91,8 +96,9 @@ func reencodeTightPng(fu *vnc.FramebufferUpdate) *vnc.FramebufferUpdate {
 // pixel is identical, PNG otherwise.
 func tightPngForColors(colors []vnc.Color, w, h uint16) vnc.Encoding {
 	n := int(w) * int(h)
-	if len(colors) != n {
-		// Length mismatch: fall back to PNG over whatever we have.
+	if n == 0 || len(colors) != n {
+		// Empty rectangle (or length mismatch): nothing to index; a zero
+		// pixel buffer would otherwise panic on colors[0].
 		return pngEncoding(buildRGBAImage(colors, w, h))
 	}
 

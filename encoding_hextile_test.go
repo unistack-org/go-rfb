@@ -219,3 +219,37 @@ func TestHextileDispatchedFromRectangle(t *testing.T) {
 		t.Fatalf("pixel (0,0) = (%d,%d,%d), want (7,7,7)", r, g, bl)
 	}
 }
+
+// TestHextileSubrectOutOfBounds verifies that a sub-rect extending past the
+// tile/rectangle edge (a malformed or malicious server) is clamped instead of
+// indexing Colors out of range.
+func TestHextileSubrectOutOfBounds(t *testing.T) {
+	b := be()
+	// 16x16 tile: background + foreground + one (fg-colored) sub-rect at
+	// x=0, y=15 with height 16 — it extends 15 rows past the tile bottom.
+	// Without the clamp in setRect this indexes Colors out of range (y reaches
+	// 30 -> offset 480 in a 256-color rect); with it, only the in-tile row
+	// (y=15) is painted.
+	b.WriteByte(0x0E) // bg + fg + any subrects (not colored -> reuses fg)
+	hp(b, 10, 20, 30) // bg
+	hp(b, 1, 2, 3)    // fg
+	b.WriteByte(0x01) // one sub-rect
+	b.WriteByte(0x0F) // x=0, y=15
+	b.WriteByte(0x0F) // w=1, h=16
+
+	c := hextileWire(b)
+	enc := &HextileEncoding{}
+	if err := enc.Read(c, newHextileRect(16, 16)); err != nil {
+		t.Fatalf("Read: %v", err)
+	}
+	// Only the in-tile bottom row (y=15, col 0) is fg; everything else bg.
+	if r, g, bl := hue(enc.Colors[0]); r != 10 || g != 20 || bl != 30 {
+		t.Fatalf("pixel (0,0) = (%d,%d,%d), want bg (10,20,30)", r, g, bl)
+	}
+	if r, g, bl := hue(enc.Colors[15*16]); r != 1 || g != 2 || bl != 3 {
+		t.Fatalf("pixel (0,15) = (%d,%d,%d), want fg (1,2,3)", r, g, bl)
+	}
+	if r, g, bl := hue(enc.Colors[15*16+1]); r != 10 || g != 20 || bl != 30 {
+		t.Fatalf("pixel (1,15) = (%d,%d,%d), want bg (10,20,30)", r, g, bl)
+	}
+}

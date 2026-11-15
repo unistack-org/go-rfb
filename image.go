@@ -107,14 +107,17 @@ func (clr *Color) Read(c Conn) error {
 		clr.R = uint16((pixel >> clr.pf.RedShift) & uint32(clr.pf.RedMax))
 		clr.G = uint16((pixel >> clr.pf.GreenShift) & uint32(clr.pf.GreenMax))
 		clr.B = uint16((pixel >> clr.pf.BlueShift) & uint32(clr.pf.BlueMax))
+		// Scale in uint32: the RFB spec allows 16-bit channel maxima
+		// (e.g. a 16-bit truecolor with max 65535), which would wrap in
+		// uint16 arithmetic.
 		if clr.pf.RedMax > 0 {
-			clr.R = uint16(clr.R * 255 / uint16(clr.pf.RedMax))
+			clr.R = uint16(uint32(clr.R) * 255 / uint32(clr.pf.RedMax))
 		}
 		if clr.pf.GreenMax > 0 {
-			clr.G = uint16(clr.G * 255 / uint16(clr.pf.GreenMax))
+			clr.G = uint16(uint32(clr.G) * 255 / uint32(clr.pf.GreenMax))
 		}
 		if clr.pf.BlueMax > 0 {
-			clr.B = uint16(clr.B * 255 / uint16(clr.pf.BlueMax))
+			clr.B = uint16(uint32(clr.B) * 255 / uint32(clr.pf.BlueMax))
 		}
 	} else {
 		*clr = clr.cm[pixel]

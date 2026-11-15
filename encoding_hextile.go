@@ -53,9 +53,18 @@ func (enc *HextileEncoding) Read(c Conn, rect *Rectangle) error {
 		*dst = col
 		return nil
 	}
+	// A malicious server can report sub-rects that extend past the tile
+	// (e.g. x=15, w=16 in a 16-wide tile); clamp like the RRE equivalent
+	// so one malformed tile cannot index Colors out of range.
 	setRect := func(sx, sy, sw, sh int, col *Color) {
 		for y := sy; y < sy+sh; y++ {
+			if y < 0 || y >= h {
+				continue
+			}
 			for x := sx; x < sx+sw; x++ {
+				if x < 0 || x >= w {
+					continue
+				}
 				enc.Colors[y*w+x] = *col
 			}
 		}
