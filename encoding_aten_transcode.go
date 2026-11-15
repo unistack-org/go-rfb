@@ -40,13 +40,20 @@ func (fu *FramebufferUpdate) TranscodeAtenHermon() *FramebufferUpdate {
 			switch c := child.(type) {
 			case *AtenHermonSubrect:
 				const t = 16
+				colors := decodeAtenSubrect(c)
+				// A short or malformed payload yields no colors; emitting a
+				// raw rectangle for it would promise t*t pixels on the wire
+				// and send none, desyncing every downstream client.
+				if colors == nil {
+					continue
+				}
 				r := &Rectangle{
 					X:       rect.X + uint16(c.X)*t,
 					Y:       rect.Y + uint16(c.Y)*t,
 					Width:   t,
 					Height:  t,
 					EncType: EncRaw,
-					Enc:     &RawEncoding{Colors: decodeAtenSubrect(c)},
+					Enc:     &RawEncoding{Colors: colors},
 				}
 				out.Rects = append(out.Rects, r)
 			case *RawEncoding:

@@ -86,7 +86,11 @@ func (enc *HextileEncoding) Read(c Conn, rect *Rectangle) error {
 				return err
 			}
 
-			// RAW: read tw*th pixels directly.
+			// RAW: read tw*th pixels directly. Per the RFB hextile spec the
+			// RAW sub-encoding for a tile carries only the pixels of the
+			// (clipped) tile — tw*th — not a full 16x16 block. This matches
+			// noVNC's decoder (bytes += tw * th * 4) and the upstream
+			// behaviour; reading 256 would desync the stream.
 			if sub&hextileRaw != 0 {
 				for y := ty; y < ty+th; y++ {
 					for x := tx; x < tx+tw; x++ {

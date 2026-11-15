@@ -159,10 +159,17 @@ func New(cfg Config) (*Proxy, error) {
 	}
 	go p.runClientMessages()
 
-	// Watch for upstream failures and close everything on error.
+	// Watch for upstream failures and close everything on error. Select on
+	// closeSignal as well: the read goroutine only pushes to ErrorCh on its
+	// own failure path, so if the upstream dies by another means (or the
+	// proxy is closed first) this watcher would otherwise block forever on
+	// an unread channel and leak.
 	go func() {
-		<-p.ccfg.ErrorCh
-		p.Close()
+		select {
+		case <-p.ccfg.ErrorCh:
+			p.Close()
+		case <-p.closeSignal:
+		}
 	}()
 
 	// Drive the upstream message pump.
@@ -221,7 +228,10 @@ func (p *Proxy) clientConfig() *vnc.ClientConfig {
 		},
 		PixelFormat: vnc.NewPixelFormatAten(),
 		Messages: append(
-			vnc.DefaultServerMessages,
+			// Copy DefaultServerMessages first: append writes into the
+			// shared package-level slice's backing array once it has spare
+			// capacity, corrupting it for every other user of the library.
+			append([]vnc.ServerMessage{}, vnc.DefaultServerMessages...),
 			&vnc.AteniKVMFrontGroundEvent{},
 			&vnc.AteniKVMKeepAliveEvent{},
 			&vnc.AteniKVMVideoGetInfo{},
@@ -273,8 +283,12 @@ func (p *Proxy) Serve(ln net.Listener) error {
 			if p.isClosed() {
 				return errClosed
 			}
-			// Transient accept failures: keep going.
-			continue
+			// A listener error (closed listener, etc.) is permanent, not
+			// transient: there is nothing left to accept. Returning keeps a
+			// closed-but-not-proxied listener from busy-spinning Accept in a
+			// tight loop at 100% CPU. Callers stop this loop via Close, which
+			// also surfaces errClosed.
+			return err
 		}
 		go p.serveDownstream(c)
 	}
@@ -428,9 +442,11 @@ func (p *Proxy) handleClientMessage(d *downstream, msg vnc.ClientMessage) {
 	switch m := msg.(type) {
 	case *vnc.SetEncodings:
 		// Record the encodings the client wants; the pump picks the
-		// right re-encoding per client. Do NOT forward upstream: the
-		// upstream stream is hermon regardless.
+		// right re-encoding per client. The message REPLACES the set
+		// (RFB §8.3), so clear before inserting; do NOT forward
+		// upstream: the upstream stream is hermon regardless.
 		d.mu.Lock()
+		d.encs = make(map[vnc.EncodingType]bool)
 		for _, e := range m.Encodings {
 			d.encs[e] = true
 		}

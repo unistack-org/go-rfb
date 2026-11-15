@@ -82,7 +82,9 @@ func TestHextileBackgroundFill(t *testing.T) {
 	}
 }
 
-// TestHextileRaw: a small 2x2 tile using the RAW sub-encoding.
+// TestHextileRaw: a small 2x2 tile using the RAW sub-encoding. The RAW
+// sub-encoding carries only the pixels of the (clipped) tile — tw*th — not a
+// full 16x16 block, matching noVNC's decoder (bytes += tw * th * 4).
 func TestHextileRaw(t *testing.T) {
 	b := be()
 	b.WriteByte(0x01) // raw

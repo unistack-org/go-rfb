@@ -206,7 +206,9 @@ func TestTranscodeAtenHermonNil(t *testing.T) {
 }
 
 // TestTranscodeAtenHermonShortData verifies a sub-rectangle with a short
-// (malformed) payload is dropped rather than emitting a broken tile.
+// (malformed) payload is dropped rather than emitting a broken tile (a raw
+// rectangle with a nil payload promises 256 pixels on the wire and sends
+// none, desyncing every downstream client).
 func TestTranscodeAtenHermonShortData(t *testing.T) {
 	sub := &AtenHermonSubrect{X: 0, Y: 0, Data: []byte{0x00, 0x7C}} // only 1 pixel
 	fu := &FramebufferUpdate{
@@ -218,11 +220,7 @@ func TestTranscodeAtenHermonShortData(t *testing.T) {
 		}},
 	}
 	got := fu.TranscodeAtenHermon()
-	if len(got.Rects) != 1 {
-		t.Fatalf("want 1 rect, got %d", len(got.Rects))
-	}
-	raw := got.Rects[0].Enc.(*RawEncoding)
-	if len(raw.Colors) != 0 {
-		t.Fatalf("want 0 colors for short data, got %d", len(raw.Colors))
+	if len(got.Rects) != 0 {
+		t.Fatalf("want 0 rects for short data, got %d", len(got.Rects))
 	}
 }
