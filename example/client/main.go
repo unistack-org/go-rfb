@@ -32,7 +32,7 @@ func main() {
 		ErrorCh:          errorCh,
 	}
 
-	cc, err := vnc.Connect(context.Background(), nc, ccfg)
+	_, err = vnc.Connect(context.Background(), nc, ccfg)
 
 	if err != nil {
 		log.Fatalf("Error negotiating connection to VNC host. %v", err)
@@ -48,5 +48,4 @@ func main() {
 			log.Printf("Received message type:%v msg:%v\n", msg.Type(), msg)
 		}
 	}
-	cc.Wait()
 }
