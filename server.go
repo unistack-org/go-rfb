@@ -271,6 +271,9 @@ func (*DefaultServerMessageHandler) Handle(c Conn) error {
 	wg.Add(2)
 
 	quit := make(chan struct{})
+	var quitOnce sync.Once
+	// stop closes quit exactly once, from any goroutine.
+	stop := func() { quitOnce.Do(func() { close(quit) }) }
 
 	// server
 	go func() {
@@ -282,10 +285,7 @@ func (*DefaultServerMessageHandler) Handle(c Conn) error {
 			case msg := <-cfg.ServerMessageCh:
 				if err = msg.Write(c); err != nil {
 					cfg.ErrorCh <- err
-					if quit != nil {
-						close(quit)
-						quit = nil
-					}
+					stop()
 					return
 				}
 			}
@@ -303,25 +303,19 @@ func (*DefaultServerMessageHandler) Handle(c Conn) error {
 				var messageType ClientMessageType
 				if err := binary.Read(c, binary.BigEndian, &messageType); err != nil {
 					cfg.ErrorCh <- err
-					if quit != nil {
-						close(quit)
-						quit = nil
-					}
+					stop()
 					return
 				}
 				msg, ok := clientMessages[messageType]
 				if !ok {
 					cfg.ErrorCh <- fmt.Errorf("unsupported message-type: %v", messageType)
-					close(quit)
+					stop()
 					return
 				}
 				parsedMsg, err := msg.Read(c)
 				if err != nil {
 					cfg.ErrorCh <- err
-					if quit != nil {
-						close(quit)
-						quit = nil
-					}
+					stop()
 					return
 				}
 				cfg.ClientMessageCh <- parsedMsg

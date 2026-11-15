@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"net"
+	"sync"
 	"testing"
 )
 
@@ -135,7 +136,8 @@ func TestReadAndRequestNextSendsFramebufferRequest(t *testing.T) {
 	fc.SetWidth(1024)
 	fc.SetHeight(768)
 
-	parsed, err := readAndRequestNext(fc, &fbuMsg{})
+	var wmu sync.Mutex
+	parsed, err := readAndRequestNext(fc, &fbuMsg{}, &wmu)
 	if err != nil {
 		t.Fatalf("readAndRequestNext error: %v", err)
 	}
@@ -168,7 +170,8 @@ func TestReadAndRequestNextNonFBU(t *testing.T) {
 	in.Write(make([]byte, 4)) // AteniKVMVideoGetInfo body
 	fc := &fakeConn{in: in}
 
-	parsed, err := readAndRequestNext(fc, &AteniKVMVideoGetInfo{})
+	var wmu sync.Mutex
+	parsed, err := readAndRequestNext(fc, &AteniKVMVideoGetInfo{}, &wmu)
 	if err != nil {
 		t.Fatalf("error: %v", err)
 	}

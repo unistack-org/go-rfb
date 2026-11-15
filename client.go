@@ -244,7 +244,7 @@ func NewClientConn(c net.Conn, cfg *ClientConfig) (*ClientConn, error) {
 // this the ATEN/IKVM server sends only the first frame and the screen freezes.
 // This mirrors the noVNC bmc-support forks, which re-request after each update
 // when continuous updates are not enabled.
-func readAndRequestNext(c Conn, m ServerMessage) (ServerMessage, error) {
+func readAndRequestNext(c Conn, m ServerMessage, writeMu *sync.Mutex) (ServerMessage, error) {
 	parsed, err := m.Read(c)
 	if err != nil {
 		return nil, err
@@ -257,8 +257,13 @@ func readAndRequestNext(c Conn, m ServerMessage) (ServerMessage, error) {
 			Width:  c.Width(),
 			Height: c.Height(),
 		}
-		if err := next.Write(c); err != nil {
-			return nil, err
+		// Serialize with the client-message writer goroutine: both write
+		// to the same underlying conn (bufio), and concurrent Writes race.
+		writeMu.Lock()
+		werr := next.Write(c)
+		writeMu.Unlock()
+		if werr != nil {
+			return nil, werr
 		}
 	}
 	return parsed, nil
@@ -274,6 +279,10 @@ func (*DefaultClientMessageHandler) Handle(c Conn) error {
 	var wg sync.WaitGroup
 	wg.Add(2)
 	defer c.Close()
+
+	// Serializes all upstream writes (the client-message writer goroutine
+	// and the auto FramebufferUpdateRequest in readAndRequestNext).
+	var writeMu sync.Mutex
 
 	serverMessages := make(map[ServerMessageType]ServerMessage)
 	for _, m := range cfg.Messages {
@@ -311,10 +320,14 @@ func (*DefaultClientMessageHandler) Handle(c Conn) error {
 
 	go func() {
 		defer wg.Done()
+		var err error
 		for {
 			select {
 			case msg := <-cfg.ClientMessageCh:
-				if err = msg.Write(c); err != nil {
+				writeMu.Lock()
+				err = msg.Write(c)
+				writeMu.Unlock()
+				if err != nil {
 					cfg.ErrorCh <- err
 					return
 				}
@@ -324,6 +337,7 @@ func (*DefaultClientMessageHandler) Handle(c Conn) error {
 
 	go func() {
 		defer wg.Done()
+		var err error
 		for {
 			select {
 			default:
@@ -338,7 +352,7 @@ func (*DefaultClientMessageHandler) Handle(c Conn) error {
 					cfg.ErrorCh <- err
 					return
 				}
-				parsedMsg, err := readAndRequestNext(c, msg)
+				parsedMsg, err := readAndRequestNext(c, msg, &writeMu)
 				if err != nil {
 					cfg.ErrorCh <- err
 					return
