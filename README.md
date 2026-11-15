@@ -36,7 +36,13 @@ Standard RFB encodings (per rfbproto):
 | Rich Cursor     | -239   | ✅   | ✅    | Pixels are decoded; the alpha/and-mask application is not implemented. |
 | X Cursor        | -240   | ✅   | ✅    | |
 | DesktopSize pseudo | -223 | ✅   | ✅    | |
+| LastRect pseudo | -224  | ✅   | ✅    | No payload; marks the end of a FramebufferUpdate. |
+| QEMU Pointer Motion Change | -257 | ✅   | ✅    | No payload; mode in header x-position (0 relative / 1 absolute). |
+| QEMU Extended Key Event | -258 | ✅   | ✅    | No payload; advertises raw-scancode key events. |
+| QEMU Audio | -259    | ✅   | ✅    | No payload; advertises an audio stream. |
 | DesktopName pseudo | -307 | ✅   | ✅    | |
+| ExtendedDesktopSize | -308 | ✅   | ✅    | New size in header w/h; per-screen layout in the payload. |
+| ContinuousUpdates | -313  | ✅   | ✅    | No payload; the EnableContinuousUpdates extension. |
 | LedState pseudo | -261   | ✅   | ✅    | |
 
 Internal / ATEN encodings (not part of rfbproto):

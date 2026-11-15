@@ -211,6 +211,18 @@ func (rect *Rectangle) Read(c Conn) error {
 		rect.Enc = &XCursorPseudoEncoding{}
 	case EncAtenHermon:
 		rect.Enc = &AtenHermon{}
+	case EncLastRectPseudo:
+		rect.Enc = &LastRectPseudoEncoding{}
+	case EncQEMUPointerMotionChangePseudo:
+		rect.Enc = &QEMUPointerMotionChangeEncoding{}
+	case EncQEMUExtendedKeyEventPseudo:
+		rect.Enc = &QEMUExtendedKeyEventEncoding{}
+	case EncQEMUAudioPseudo:
+		rect.Enc = &QEMUAudioEncoding{}
+	case EncExtendedDesktopSizePseudo:
+		rect.Enc = &ExtendedDesktopSizeEncoding{}
+	case EncContinuousUpdatesPseudo:
+		rect.Enc = &ContinuousUpdatesEncoding{}
 	default:
 		return fmt.Errorf("unsupported encoding %s", rect.EncType)
 	}

@@ -127,6 +127,11 @@ func (fb *FrameBuffer) compositeRectLocked(rect *Rectangle) {
 		// Width/Height fields.
 		fb.resizeLocked(int(rect.Width), int(rect.Height))
 
+	case EncExtendedDesktopSizePseudo:
+		// Like DesktopSizePseudo, the new size is in the rect header's
+		// Width/Height; the per-screen configuration is in the encoding.
+		fb.resizeLocked(int(rect.Width), int(rect.Height))
+
 	case EncCopyRect:
 		if enc, ok := rect.Enc.(*CopyRectEncoding); ok {
 			fb.copyRectLocked(rect, enc)

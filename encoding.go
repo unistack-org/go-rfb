@@ -60,6 +60,7 @@ const (
 	EncCompressionLevel1             EncodingType = -256
 	EncQEMUPointerMotionChangePseudo EncodingType = -257
 	EncQEMUExtendedKeyEventPseudo    EncodingType = -258
+	EncQEMUAudioPseudo               EncodingType = -259
 	EncTightPng                      EncodingType = -260
 	EncLedStatePseudo                EncodingType = -261
 	EncDesktopNamePseudo             EncodingType = -307
